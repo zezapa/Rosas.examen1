@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen Interactivo de Diseño Floral</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Script de EmailJS para el envío de correos -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+        }
+        .option-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .correct {
+            background-color: #22c55e !important; /* green-500 */
+            color: white !important;
+            border-color: #16a34a !important; /* green-600 */
+        }
+        .incorrect {
+            background-color: #ef4444 !important; /* red-500 */
+            color: white !important;
+            border-color: #dc2626 !important; /* red-600 */
+        }
+        .disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body class="bg-pink-50 flex items-center justify-center min-h-screen p-4">
+
+    <div id="quiz-container" class="w-full max-w-2xl bg-white rounded-xl shadow-lg p-6 md:p-8">
+        
+        <!-- Formulario de Datos del Usuario -->
+        <div id="user-form">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 text-center">Examen de Diseño Floral</h1>
+            <p class="text-gray-500 mt-2 text-center mb-6">Ingresa tus datos para comenzar</p>
+            <form id="start-form">
+                <div class="mb-4">
+                    <label for="name" class="block text-gray-700 font-semibold mb-2">Nombre Completo</label>
+                    <input type="text" id="name" name="name" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400" placeholder="Tu nombre" required>
+                </div>
+                <div class="mb-6">
+                    <label for="email" class="block text-gray-700 font-semibold mb-2">Correo Electrónico</label>
+                    <input type="email" id="email" name="email" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400" placeholder="tu.correo@ejemplo.com" required>
+                </div>
+                <button type="submit" class="w-full bg-pink-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-pink-600 transition-colors duration-300">
+                    Comenzar Examen
+                </button>
+            </form>
+        </div>
+        
+        <!-- Contenido del Examen (oculto al inicio) -->
+        <div id="quiz-content" class="hidden">
+            <div id="quiz-header" class="text-center mb-6">
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Examen de Diseño Floral</h1>
+                <p class="text-gray-500 mt-2">Pon a prueba tus conocimientos</p>
+                <div class="h-1 bg-pink-200 rounded-full mt-4">
+                    <div id="progress-bar" class="h-1 bg-pink-500 rounded-full" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <div id="question-area">
+                <!-- La pregunta y las opciones se cargarán aquí con JS -->
+            </div>
+
+            <div id="navigation" class="mt-8 flex justify-between items-center">
+                 <div id="feedback" class="text-lg font-semibold"></div>
+                 <button id="next-btn" class="bg-pink-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-pink-600 transition-colors duration-300 hidden">
+                    Siguiente →
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Pantalla de Resultados -->
+        <div id="result-area" class="hidden text-center">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">¡Examen completado!</h2>
+            <p class="text-lg text-gray-600">Tu puntuación final es:</p>
+            <p id="score" class="text-5xl font-bold my-4 text-pink-500"></p>
+            <p id="email-status" class="text-gray-600"></p>
+            <button id="restart-btn" class="bg-gray-700 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-800 transition-colors duration-300 mt-6">
+                Intentar de nuevo
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Modal de configuración de EmailJS -->
+    <div id="config-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-xl bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-xl leading-6 font-bold text-gray-900">Configuración Requerida</h3>
+                <div class="mt-4 px-4 py-3 text-left">
+                    <p class="text-md text-gray-600">
+                        Para poder enviar los resultados por correo, necesitas configurar tus credenciales de <strong>EmailJS</strong>.
+                    </p>
+                    <ol class="list-decimal list-inside mt-4 space-y-2 text-sm text-gray-700 bg-gray-50 p-4 rounded-lg">
+                        <li>Ve a <strong><a href="https://www.emailjs.com" target="_blank" class="text-pink-600 hover:underline font-semibold">EmailJS.com</a></strong> y crea una cuenta gratuita.</li>
+                        <li>En el panel, ve a "Email Services" y añade tu servicio (ej. Gmail).</li>
+                        <li>Ve a "Email Templates" y crea una plantilla de correo.</li>
+                        <li>Copia tu <strong>Service ID</strong>, <strong>Template ID</strong> y <strong>Public Key</strong> (está en la sección "Account").</li>
+                        <li>Pega estas credenciales al inicio de la etiqueta <code>&lt;script&gt;</code> en este archivo.</li>
+                    </ol>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button id="close-modal-btn" class="px-4 py-2 bg-pink-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-300">
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // <!-- INSTRUCCIONES PARA EL ENVÍO DE CORREO -->
+        // Para que el envío de correos funcione, necesitas una cuenta gratuita en https://www.emailjs.com
+        // 1. Regístrate y añade tu servicio de correo (Ej: Gmail).
+        // 2. Crea una plantilla de correo.
+        // 3. Obtén tus credenciales y pégalas aquí abajo.
+        const SERVICE_ID = 'TU_SERVICE_ID'; // Pega aquí tu Service ID de EmailJS
+        const TEMPLATE_ID = 'TU_TEMPLATE_ID'; // Pega aquí tu Template ID de EmailJS
+        const USER_ID = 'pn8CBAhtKGscf9NMu';     // ¡Public Key actualizada!
+        
+        // --- PREGUNTAS DEL EXAMEN ---
+        const quizData = [
+            { question: "¿Cuál es el primer paso fundamental para conseguir arreglos duraderos y hermosos?", options: ["La selección de colores vivos.", "El correcto cuidado de tus flores.", "El uso de un jarrón de diseño.", "La fotografía profesional del arreglo."], answer: "El correcto cuidado de tus flores." },
+            { question: "El video de AnaCecy, \"Flores que duren frescas por más tiempo ¡10 Tips!\", ofrece consejos prácticos con el propósito específico de:", options: ["Enseñar a combinar colores.", "Mostrar cómo podar rosales.", "Prolongar la vida de tus flores cortadas.", "Crear arreglos para eventos."], answer: "Prolongar la vida de tus flores cortadas." },
+            { question: "¿Qué herramienta principal se presenta en el Módulo 2 para aprender a combinar colores en los arreglos florales?", options: ["Una paleta de acuarelas.", "Un catálogo de tendencias.", "El círculo cromático.", "Un software de diseño digital."], answer: "El círculo cromático." },
+            { question: "¿Cuál es el objetivo principal de aplicar la teoría del color en el arte floral, según lo descrito en el curso?", options: ["Lograr que las flores parezcan más grandes.", "Lograr composiciones equilibradas.", "Acelerar el proceso de diseño.", "Utilizar la menor cantidad de flores posible."], answer: "Lograr composiciones equilibradas." },
+            { question: "¿Qué video del Módulo 3 se enfoca específicamente en \"Las 5 principales tendencias en diseño floral para 2025\"?", options: ["El video de Susan Decoraciones.", "El video de TelasOnline.", "El video de Aleexischristine.", "El video de Decolet."], answer: "El video de Susan Decoraciones." },
+            { question: "De acuerdo con la descripción, ¿cómo puede el video de \"Susan Decoraciones\" sobre tendencias generales inspirar a un florista?", options: ["Muestra técnicas avanzadas de alambrado.", "Ofrece descuentos en herramientas de jardinería.", "Muestra tendencias de color y estilo que inspiran los arreglos florales.", "Enseña a construir vitrinas para tiendas."], answer: "Muestra tendencias de color y estilo que inspiran los arreglos florales." },
+            { question: "¿Qué aspecto técnico, crucial para la presentación de las flores en tiendas, se aborda en el Módulo 4?", options: ["El control de la temperatura del agua.", "El marketing en redes sociales.", "La contabilidad del negocio.", "La iluminación de las flores en vitrinas."], answer: "La iluminación de las flores en vitrinas." },
+            { question: "Según el curso, ¿por qué se considera \"esencial hoy en día\" aprender a tomar buenas fotografías de los arreglos?", options: ["Para poder participar en concursos de fotografía.", "Para promocionarlos.", "Para crear un álbum de recuerdos personal.", "Para obtener un certificado de calidad."], answer: "Para promocionarlos." },
+            { question: "El video de Azagaworld, \"¿Cómo tomar fotos profesionales con tu celular?\", se enfoca en mejorar la calidad visual del trabajo utilizando:", options: ["Cámaras profesionales costosas.", "Un estudio fotográfico completo.", "Herramientas accesibles.", "Programas de edición de video."], answer: "Herramientas accesibles." },
+            { question: "El video \"3 Pasos Básicos para Hidratar tus Flores\" se enfoca en el cuidado fundamental de las flores desde el momento en que:", options: ["Se plantan en el jardín.", "Se diseñan en el arreglo.", "Llevan una semana en el jarrón.", "Llegan a tus manos."], answer: "Llegan a tus manos." }
+        ];
+
+        // --- ELEMENTOS DEL DOM ---
+        const userForm = document.getElementById('user-form');
+        const startForm = document.getElementById('start-form');
+        const quizContent = document.getElementById('quiz-content');
+        const questionArea = document.getElementById('question-area');
+        const nextBtn = document.getElementById('next-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const resultArea = document.getElementById('result-area');
+        const scoreElement = document.getElementById('score');
+        const feedbackElement = document.getElementById('feedback');
+        const progressBar = document.getElementById('progress-bar');
+        const emailStatus = document.getElementById('email-status');
+        const configModal = document.getElementById('config-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+
+        // --- ESTADO DEL EXAMEN ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userAnswers = [];
+        let userName = '';
+        let userEmail = '';
+
+        /** Inicia o reinicia el examen, mostrando el formulario inicial. */
+        function resetQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = [];
+            resultArea.classList.add('hidden');
+            quizContent.classList.add('hidden');
+            userForm.classList.remove('hidden');
+            document.getElementById('name').value = '';
+            document.getElementById('email').value = '';
+        }
+
+        /** Carga la pregunta actual y sus opciones en la interfaz. */
+        function loadQuestion() {
+            questionArea.innerHTML = '';
+            feedbackElement.innerHTML = '';
+            nextBtn.classList.add('hidden');
+            const currentQuestion = quizData[currentQuestionIndex];
+            const questionElement = document.createElement('div');
+            questionElement.innerHTML = `<p class="text-gray-500 text-sm font-semibold">Pregunta ${currentQuestionIndex + 1} de ${quizData.length}</p><h2 class="text-xl md:text-2xl font-semibold my-4 text-gray-800">${currentQuestion.question}</h2>`;
+            questionArea.appendChild(questionElement);
+            const optionsElement = document.createElement('div');
+            optionsElement.id = 'options-container';
+            optionsElement.className = 'flex flex-col gap-3';
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.innerText = option;
+                button.className = "option-btn w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:bg-pink-100 hover:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-300";
+                button.onclick = () => selectAnswer(button, option, currentQuestion.answer);
+                optionsElement.appendChild(button);
+            });
+            questionArea.appendChild(optionsElement);
+            updateProgressBar();
+        }
+
+        /** Maneja la selección de una respuesta y guarda la elección. */
+        function selectAnswer(selectedButton, selectedOption, correctAnswer) {
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.classList.add('disabled');
+            const isCorrect = selectedOption === correctAnswer;
+            userAnswers.push({ question: quizData[currentQuestionIndex].question, selected: selectedOption, correct: correctAnswer, isCorrect: isCorrect });
+            if (isCorrect) {
+                score++;
+                selectedButton.classList.add('correct');
+                feedbackElement.textContent = '¡Correcto!';
+                feedbackElement.className = 'text-lg font-semibold text-green-500';
+            } else {
+                selectedButton.classList.add('incorrect');
+                feedbackElement.textContent = 'Incorrecto';
+                feedbackElement.className = 'text-lg font-semibold text-red-500';
+                Array.from(optionsContainer.getElementsByTagName('button')).forEach(btn => { if (btn.innerText === correctAnswer) btn.classList.add('correct'); });
+            }
+            nextBtn.classList.remove('hidden');
+        }
+
+        /** Muestra los resultados y dispara el envío de correo. */
+        function showResults() {
+            quizContent.classList.add('hidden');
+            resultArea.classList.remove('hidden');
+            const finalScore = Math.round((score / quizData.length) * 100);
+            scoreElement.innerText = `${finalScore}%`;
+            sendEmail(finalScore);
+        }
+        
+        /** Actualiza la barra de progreso. */
+        function updateProgressBar() {
+            const progress = ((currentQuestionIndex) / quizData.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+        
+        /** Formatea y envía los resultados por correo usando EmailJS. */
+        function sendEmail(finalScore) {
+             if (!SERVICE_ID || !TEMPLATE_ID || !USER_ID || SERVICE_ID === 'TU_SERVICE_ID' || TEMPLATE_ID === 'TU_TEMPLATE_ID') {
+                console.error("EmailJS no está configurado. Por favor, añade tus credenciales.");
+                emailStatus.innerText = "Configuración de correo incompleta.";
+                emailStatus.className = 'text-gray-600';
+                configModal.classList.remove('hidden');
+                return;
+            }
+
+            emailStatus.innerText = 'Enviando resultados a tu correo...';
+            (function(){ emailjs.init(USER_ID); })();
+            let emailBody = '';
+            userAnswers.forEach((ans, index) => {
+                emailBody += `<p><strong>Pregunta ${index + 1}:</strong> ${ans.question}</p><p><strong>Tu respuesta:</strong> ${ans.selected} ${ans.isCorrect ? ' (Correcta)' : ' (Incorrecta)'}</p>${!ans.isCorrect ? `<p><strong>Respuesta correcta:</strong> ${ans.correct}</p>` : ''}<hr>`;
+            });
+            const templateParams = { from_name: userName, from_email: userEmail, to_email: 'desert.latin@gmail.com', score: `${finalScore}%`, body: emailBody };
+            emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams)
+                .then(function(response) {
+                   console.log('SUCCESS!', response.status, response.text);
+                   emailStatus.innerText = '¡Resultados enviados a tu correo exitosamente!';
+                   emailStatus.className = 'text-lg font-semibold text-green-500';
+                }, function(error) {
+                   console.log('FAILED...', error);
+                   emailStatus.innerText = 'Error al enviar los resultados.';
+                   emailStatus.className = 'text-lg font-semibold text-red-500';
+                });
+        }
+
+        // --- EVENT LISTENERS ---
+        startForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            userName = document.getElementById('name').value;
+            userEmail = document.getElementById('email').value;
+            userForm.classList.add('hidden');
+            quizContent.classList.remove('hidden');
+            loadQuestion();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        });
+
+        restartBtn.addEventListener('click', resetQuiz);
+        
+        closeModalBtn.addEventListener('click', () => {
+            configModal.classList.add('hidden');
+        });
+
+        // --- INICIO ---
+        document.addEventListener('DOMContentLoaded', resetQuiz);
+
+    </script>
+</body>
+</html>
